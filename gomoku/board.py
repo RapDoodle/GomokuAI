@@ -1,8 +1,8 @@
 import pygame
 import numpy as np
 
-from exception import AlreadyPlacedExcpetion, ValidationError
-from env import get_env
+from common.exception import AlreadyPlacedExcpetion, ValidationError
+from common.env import get_env
 
 class GameBoard():
 
@@ -30,7 +30,7 @@ class GameBoard():
         self.screen = pygame.display.set_mode((self.window_width, self.window_height))
         self.message('Turn: Black')
         self.clock = pygame.time.Clock()
-        self.font = pygame.font.Font('./fonts/times.ttf', 24)
+        self.font = pygame.font.Font('./gomoku/fonts/times.ttf', 24)
         self.running = True
 
         # Grids

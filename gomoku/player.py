@@ -1,7 +1,7 @@
 import numpy as np
 
-from exception import ValidationError
-from env import get_env
+from common.exception import ValidationError
+from common.env import get_env
 
 class Player():
 
