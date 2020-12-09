@@ -131,8 +131,8 @@ class Output(Dense):
 
         if self.activation == 'sigmoid' or self.activation == 'softmax':
             self.dZ = self.A - Y_train
-            self.dW = 1./m * np.dot(self.dZ, self.prev_layer.A.T)
-            self.db = 1./m * np.sum(self.dZ, axis = 1, keepdims = True)
+            self.dW = (1/m) * np.dot(self.dZ, self.prev_layer.A.T)
+            self.db = (1/m) * np.sum(self.dZ, axis = 1, keepdims = True)
         else:
             raise NotImplementedError()
 
