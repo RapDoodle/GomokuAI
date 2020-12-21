@@ -18,6 +18,11 @@ class GameBoard():
         # Turn
         self.turn = 1
         self.end = False
+        self.count = 1
+
+        # Font
+        pygame.font.init()
+        self.font = pygame.font.SysFont(None, 24)
 
         # Color scheme
         self.background_color = (255, 206, 115)
@@ -83,7 +88,14 @@ class GameBoard():
         y = get_env('MARGIN') + r * get_env('GRID_LEN')
         r = get_env('GRID_LEN') // 2
         piece_color = (255, 255, 255) if color == 'W' else (0, 0, 0)
+        text_color = (0, 0, 0) if color == 'W' else (255, 255, 255)
         pygame.draw.circle(self.screen, piece_color, [x, y], r)
+        step_num = self.font.render(str(self.count), False, text_color)
+        self.count = self.count + 1
+        box_x = step_num.get_rect().width
+        box_y = step_num.get_rect().height
+
+        self.screen.blit(step_num, (x - box_x // 2 + 1, y - box_y // 2))
         pygame.display.update()
 
     def click_handler(self, event):
