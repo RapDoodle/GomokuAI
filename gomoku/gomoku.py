@@ -186,7 +186,6 @@ class Gomoku():
         df = pd.read_csv('./test.csv')
         for idx, row in df.iterrows():
             self.click(row['row'], row['column'], ignore_message = True, verify_color = row['color'])
-            print(idx)
             pygame.time.wait(100)
-            # time.sleep(2)
+            pygame.event.pump()
 
