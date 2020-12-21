@@ -12,6 +12,9 @@ class Player():
 
         self.name = name
         self.color = color
+        self.player_init()
+
+    def player_init(self):
         num_grids = get_env('NUM_GRIDS')
         self.map_my_pieces = np.zeros((num_grids, num_grids))
         self.map_prev_move = np.zeros((num_grids, num_grids))
