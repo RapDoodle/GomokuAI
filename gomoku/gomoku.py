@@ -18,43 +18,48 @@ class Gomoku():
         self.player1 = None
         self.player2 = None
         self.log = []
+        self.render = False
     
-    def start(self, player1, player2):
-        self.board = GameBoard(game = self)
-
+    def start(self, player1, player2, render = False):
         # Setting players
         self.player1 = player1
         self.player2 = player2
 
-        player1.set_board(self)
-        player2.set_board(self)
+        player1.set_game(self)
+        player2.set_game(self)
 
         self.game_init()
 
-        self.board.spin()
+        if render:
+            self.render = True
+            self.board = GameBoard(game = self)
+            self.board.draw_board()
+            self.board.spin()
 
     def restart(self):
         self.game_init()
         self.player1.player_init()
         self.player2.player_init()
         self.log = []
-        self.board.draw_board()
+        if self.render:
+            self.board.draw_board()
 
     def game_init(self):
         self.grids = np.zeros((get_env('NUM_GRIDS'), get_env('NUM_GRIDS')), dtype=str)
 
-        self.board.draw_board()
-
         # Turn
-        self.turn = 1
+        self.turn = 'B'
         self.end = False
         self.count = 1
 
-    def place(self, r, c, turn_check = None):
+        if self.render:
+            self.board.draw_board()
+
+    def place(self, r, c, turn_check = None, ignore_message = False):
         if turn_check is not None:
-            if (self.turn == 1 and turn_check == 'W') or (self.turn == 2 and turn_check == 'B'):
+            if turn_check not in ['W', 'B']:
                 raise ValidationError('Turn check failed')
-            elif turn_check not in ['W', 'B']:
+            elif self.turn != turn_check:
                 raise ValidationError('Invaid turn identifier')
         
         if r < 0 or r > get_env('NUM_GRIDS') - 1:
@@ -63,52 +68,58 @@ class Gomoku():
         if c < 0 or c > get_env('NUM_GRIDS') - 1:
             raise ValidationError('Invalid column number')
         
-        if self.turn == 1:
-            color = 'B'
+        if self.turn == 'B':
+            curr_player = self.player1
+            opponent_player = self.player2
         else:
-            color = 'W'
+            curr_player = self.player2
+            opponent_player = self.player1
 
         if (self.grids[r][c] == ''):
-            self.grids[r][c] = color
+            self.grids[r][c] = curr_player.color
         else:
             raise AlreadyPlacedExcpetion()
 
-        piece_color = (255, 255, 255) if color == 'W' else (0, 0, 0)
-        count_color = (0, 0, 0) if color == 'W' else (255, 255, 255)
+        curr_player.record_place(r, c)
 
-        self.board.render_piece(r, c, piece_color = piece_color, 
-            render_count = True, count = self.count, count_color = count_color)
+        # If no exception occurred
+        if self.win_check(r, c, curr_player.color):
+            msg = curr_player.name + ' won'
+            if self.render:
+                if ignore_message:
+                    self.board.set_title(msg)
+                else:
+                    info_message_box(msg)
+            else:
+                print(msg)
+        else:
+            if self.render:
+                if opponent_player.color == 'B':
+                    self.board.set_title('Turn: black')
+                else:
+                    self.board.set_title('Turn: white')
         
-        self.log.append((r, c, color, self.count))
+        if self.render:
+            piece_color = (255, 255, 255) if curr_player.color == 'W' else (0, 0, 0)
+            count_color = (0, 0, 0) if curr_player.color == 'W' else (255, 255, 255)
+
+            self.board.render_piece(r, c, piece_color = piece_color, 
+                render_count = True, count = self.count, count_color = count_color)
+        
+        self.log.append((r, c, curr_player.color, self.count))
         self.count = self.count + 1
+
+        # Handover the turn
+        self.turn = opponent_player.color
 
     def click(self, r, c, ignore_message = False, verify_color = None):
         if not self.end:
             if verify_color is not None:
-                if (self.turn == 1 and verify_color == 'W') or (self.turn == 2 and verify_color == 'B'):
-                    raise ValidationError('Incorrect color in log')
+                if self.turn != verify_color:
+                    raise ValidationError('incorrect color in log')
 
             try:
-                if self.turn == 1:
-                    self.player1.place(r, c)
-                    self.turn = 2
-                    if self.win_check(r, c, 'B'):
-                        if ignore_message:
-                            self.board.set_title('Black Won!')
-                        else:
-                            info_message_box('Black Won!')
-                    else:
-                        self.board.set_title('Turn: White')
-                else:
-                    self.player2.place(r, c)
-                    self.turn = 1
-                    if self.win_check(r, c, 'W'):
-                        if ignore_message:
-                            self.board.set_title('White Won!')
-                        else: 
-                            info_message_box('White Won!')
-                    else:
-                        self.board.set_title('Turn: Black')
+                self.place(r, c, turn_check = verify_color, ignore_message = ignore_message)
             except AlreadyPlacedExcpetion:
                 print('Already placed.')
                 # pass
@@ -184,7 +195,7 @@ class Gomoku():
         self.game_init()
 
         df = pd.read_csv('./test.csv')
-        for idx, row in df.iterrows():
+        for _, row in df.iterrows():
             self.click(row['row'], row['column'], ignore_message = True, verify_color = row['color'])
             pygame.time.wait(100)
             pygame.event.pump()
