@@ -58,15 +58,15 @@ class Gomoku():
     def place(self, r, c, turn_check = None, ignore_message = False):
         if turn_check is not None:
             if turn_check not in ['W', 'B']:
-                raise ValidationError('Turn check failed')
+                raise ValidationError('invaid turn identifier')
             elif self.turn != turn_check:
-                raise ValidationError('Invaid turn identifier')
+                raise ValidationError('turn check failed')
         
         if r < 0 or r > get_env('NUM_GRIDS') - 1:
-            raise ValidationError('Invalid row number')
+            raise ValidationError('invalid row number')
 
         if c < 0 or c > get_env('NUM_GRIDS') - 1:
-            raise ValidationError('Invalid column number')
+            raise ValidationError('invalid column number')
         
         if self.turn == 'B':
             curr_player = self.player1
@@ -111,6 +111,8 @@ class Gomoku():
 
         # Handover the turn
         self.turn = opponent_player.color
+        
+        return True
 
     def click(self, r, c, ignore_message = False, verify_color = None):
         if not self.end:

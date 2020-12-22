@@ -22,8 +22,12 @@ class Player():
     def set_game(self, game):
         self.game = game
 
+    def place(self, r, c):
+        res = self.game.place(r, c, self.color)
+        self.record_place(r, c)
+        return res
+
     def record_place(self, r, c):
-        # self.game.place(r, c, self.color)
         self.map_my_pieces[r][c] = 1
         num_grids = get_env('NUM_GRIDS')
         self.map_prev_move = np.zeros((num_grids, num_grids))

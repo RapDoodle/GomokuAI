@@ -60,10 +60,10 @@ class SequentialModel():
     def predict(self, X):
         return self.input_layer.forward(X)
 
-    def fit(self, X_train, y_train):
+    def fit(self, X_train, y_train, learning_rate = 0.1):
         self.predict(X_train)
         self.output_layer.backward(y_train)
-        self.output_layer.update_weights(learning_rate = 0.1)
+        self.output_layer.update_weights(learning_rate = learning_rate)
         
     def summary(self):
         print('========== NEURAL NETWORK SUMMARY ==========')

@@ -22,6 +22,9 @@ class Input():
     def backward(self, m):
         return
 
+    def update_weights(self, learning_rate = 0.01, optimizer = None):
+        return
+
 
 class Dense():
 
@@ -58,8 +61,9 @@ class Dense():
         self.next_layer = next_layer
         self.prev_layer = prev_layer
         
-        self.W = np.zeros((self.units, prev_dims))
+        # self.W = np.zeros((self.units, prev_dims))
         self.W = np.random.randn(self.units, prev_dims) / np.sqrt(prev_dims)
+        self.b = np.zeros((self.units, 1))
 
     def set_next_layer(self, next_layer):
         self.next_layer = next_layer
@@ -84,12 +88,12 @@ class Dense():
             self.A = tanh(self.Z)
         else:
             self.A = linear(self.Z)
-        
+
         if self.next_layer is not None:
             return self.next_layer.forward(self.Z)
         return self.A
 
-    def backward(self, m):
+    def backward(self, m, lambd = 0.1):
         self.dA = np.dot(self.next_layer.W.T, self.next_layer.dZ)
         
         if self.activation == 'relu':
@@ -105,7 +109,7 @@ class Dense():
         elif self.activation == 'tanh':
             self.dZ = np.dot(self.next_layer.W.T, self.next_layer.dZ) * (1 - np.power(self.A, 2))
 
-        self.dW = (1/m) * np.dot(self.dZ, self.prev_layer.A.T)
+        self.dW = (1/m) * np.dot(self.dZ, self.prev_layer.A.T) + (lambd / m) * self.W
         self.db = (1/m) * np.sum(self.dZ, axis = 1, keepdims = True)
 
         self.prev_layer.backward(m)
@@ -113,6 +117,11 @@ class Dense():
     def update_weights(self, learning_rate = 0.01, optimizer = None):
         self.W -= learning_rate * self.dW
         self.b -= learning_rate * self.db
+        # print(self.units)
+        # if self.units == 256:
+        #     print('W', self.W[0][0])
+        #     print('b', self.b[0])
+        self.prev_layer.update_weights(learning_rate = learning_rate)
 
 
 class Output(Dense):

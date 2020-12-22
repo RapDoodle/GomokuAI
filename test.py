@@ -4,6 +4,7 @@ from nn.model import SequentialModel
 from nn.layers import Input, Dense, Output
 from gomoku.player import Player
 from gomoku.gomoku import Gomoku
+from common.exception import AlreadyPlacedExcpetion
 
 import numpy as np
 
@@ -16,7 +17,7 @@ model.add(Input(num_input_units))
 model.add(Dense(512, activation = 'relu', use_bias = True))
 model.add(Dense(512, activation = 'relu', use_bias = True))
 model.add(Dense(384, activation = 'relu', use_bias = True))
-model.add(Dense(384, activation = 'relu', use_bias = True))
+model.add(Dense(256, activation = 'relu', use_bias = True))
 model.add(Dense(225, activation = 'relu', use_bias = True))
 model.add(Output(num_output_units, activation = 'softmax', use_bias = True))
 model.compile()
@@ -29,22 +30,46 @@ model.summary()
 gomoku = Gomoku()
 player1 = Player('Player 1', 'B')
 player2 = Player('Player 2', 'W')
-# gomoku.start(player1, player2)
+gomoku.start(player1, player2, render = False)
 
-turn = 1
-max_turn = 300
+turn = 'B'
+max_turn = 30000
+player1.place(7,7)
+turn = 'W'
+success = 0
 for i in range(max_turn):
-    if turn == 1:
+    if turn == 'B':
         curr_player = player1
         opponent_player = player2
     else:
         curr_player = player2
         opponent_player = player1
     
-    X = curr_player.map_my_pieces.reshape(225, 1)
-    X = np.append(X, opponent_player.map_my_pieces.reshape(225, 1), axis = 0)
-    X = np.append(X, curr_player.map_prev_move.reshape(225, 1), axis = 0)
-    
-    break
-    
-    
+    X = curr_player.map_my_pieces.reshape((225, 1))
+    X = np.append(X, opponent_player.map_my_pieces.reshape((225, 1)), axis = 0)
+    X = np.append(X, curr_player.map_prev_move.reshape((225, 1)), axis = 0)
+
+    y = model.predict(X)
+    pos = y.argmax()
+    r = pos // 15
+    c = pos % 15
+
+    if r == 0 and c == 0:
+        print(y)
+
+    # print(i)
+
+    try:
+        if curr_player.place(r, c):
+            turn = opponent_player.color
+            success = success + 1
+        else:
+            print('???')
+    except AlreadyPlacedExcpetion:
+        if i % 20 == 0:
+            print('{}/{} Step: {} Current attempt: ({}, {})'.format(i, max_turn, success, r, c), end = '\r')
+        y = curr_player.map_prev_move.reshape((225, 1)) * -1
+        model.fit(X, y, learning_rate = 0.01)
+
+
+gomoku.save()
