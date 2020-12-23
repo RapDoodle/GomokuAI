@@ -12,6 +12,8 @@ def tanh(X):
 def linear(X):
     return X
 
-def softmax(X):
-    e_X = np.exp(X)
-    return e_X / np.sum(e_X)
+def softmax(x):
+    f = np.exp(X - np.max(X))  # shift values
+    return f / f.sum(axis = 0)
+    # e_X = np.exp(X)
+    # return e_X / np.sum(e_X)

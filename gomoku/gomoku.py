@@ -8,6 +8,9 @@ from gomoku.board import GameBoard
 from gomoku.player import Player
 from common.env import get_env
 from gomoku.message_box import info_message_box
+import tkinter as tk
+from tkinter import filedialog
+import common.constant as const
 
 class Gomoku():
 
@@ -56,6 +59,8 @@ class Gomoku():
             self.board.draw_board()
 
     def place(self, r, c, turn_check = None, ignore_message = False):
+        flag = const.PLACE_ERROR
+
         if turn_check is not None:
             if turn_check not in ['W', 'B']:
                 raise ValidationError('invaid turn identifier')
@@ -84,15 +89,15 @@ class Gomoku():
 
         # If no exception occurred
         if self.win_check(r, c, curr_player.color):
+            flag = const.PLACE_WIN
             msg = curr_player.name + ' won'
             if self.render:
                 if ignore_message:
                     self.board.set_title(msg)
                 else:
                     info_message_box(msg)
-            else:
-                print(msg)
         else:
+            flag = const.PLACE_SUCCESS
             if self.render:
                 if opponent_player.color == 'B':
                     self.board.set_title('Turn: black')
@@ -106,13 +111,13 @@ class Gomoku():
             self.board.render_piece(r, c, piece_color = piece_color, 
                 render_count = True, count = self.count, count_color = count_color)
         
-        self.log.append((r, c, curr_player.color, self.count))
+        self.log.append((self.count, r, c, curr_player.color))
         self.count = self.count + 1
 
         # Handover the turn
         self.turn = opponent_player.color
         
-        return True
+        return flag
 
     def click(self, r, c, ignore_message = False, verify_color = None):
         if not self.end:
@@ -189,14 +194,19 @@ class Gomoku():
             
         return count
         
-    def save(self):
-        df = pd.DataFrame(self.log, columns = ['row', 'column', 'color', 'step']) 
-        df.to_csv('./test.csv', index = False)
+    def save(self, filename = 'default'):
+        df = pd.DataFrame(self.log, columns = ['step', 'row', 'column', 'color']) 
+        df.to_csv('./replay/{}.csv'.format(filename), index = False)
 
     def load(self):
+        root = tk.Tk()
+        root.withdraw()
+
+        replay_path = filedialog.askopenfilename()
+
         self.game_init()
 
-        df = pd.read_csv('./test.csv')
+        df = pd.read_csv(replay_path)
         for _, row in df.iterrows():
             self.click(row['row'], row['column'], ignore_message = True, verify_color = row['color'])
             pygame.time.wait(100)
