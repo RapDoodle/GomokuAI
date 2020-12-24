@@ -2,6 +2,7 @@ import numpy as np
 
 from common.exception import ModelError
 from nn.layers import Input, Dense, Output
+from nn.genetic_algorithm.layers import GAInput, GADense, GAOutput
 
 class SequentialModel():
 
@@ -28,7 +29,8 @@ class SequentialModel():
             raise ModelError('the first layer of the model must be of type Input')
 
         if not isinstance(self.layers[-1], Output):
-            raise ModelError('the last layer of the model must be of type Output')
+            if not isinstance(self.layers[-1], GAOutput):
+                raise ModelError('the last layer of the model must be of type Output')
 
         self.compiled = True
 
@@ -74,7 +76,13 @@ class SequentialModel():
         curr_layer = self.input_layer
         print('  Type\t\tUnits\tUse bias')
         while curr_layer is not None:
-            if isinstance(curr_layer, Output):
+            if isinstance(curr_layer, GAOutput):
+                type = 'GAOutput'
+            elif isinstance(curr_layer, GAInput):
+                type = 'GAInput'
+            elif isinstance(curr_layer, GADense):
+                type = 'GADense'
+            elif isinstance(curr_layer, Output):
                 type = 'Output'
             elif isinstance(curr_layer, Input):
                 type = 'Input'
