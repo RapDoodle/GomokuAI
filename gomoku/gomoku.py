@@ -204,6 +204,9 @@ class Gomoku():
 
         replay_path = filedialog.askopenfilename()
 
+        if len(replay_path) == 0:
+            return
+
         self.game_init()
 
         df = pd.read_csv(replay_path)
